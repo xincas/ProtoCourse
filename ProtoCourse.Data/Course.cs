@@ -2,9 +2,8 @@
 
 namespace ProtoCourse.Data;
 
-public class Course
+public class Course : BaseEntity
 {
-    public Guid Id { get; set; }
     [ForeignKey(nameof(Author))]
     public string AuthorId;
     public string Title { get; set; }
@@ -14,5 +13,5 @@ public class Course
     public List<Lesson?> Lessons { get; set; }
 
     //public List<string> StudentIds { get => Students.Select(s => s.Id).ToList(); }
-    public List<User> Students { get; set; } = new();
+    public List<User?> Students { get; set; } = new();
 }

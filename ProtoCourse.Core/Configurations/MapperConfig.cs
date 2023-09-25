@@ -14,10 +14,12 @@ public class MapperConfig : Profile
         CreateMap<Course, GetCourseDto>().ReverseMap();
         CreateMap<Course, UpdateCourseDto>().ReverseMap();
         CreateMap<Course, CourseDto>().ReverseMap();
+        CreateMap<Course, CourseNoSensitiveDto>().ReverseMap();
 
         CreateMap<Lesson, CreateLessonDto>().ReverseMap();
         CreateMap<Lesson, UpdateLessonDto>().ReverseMap();
         CreateMap<Lesson, LessonDto>().ReverseMap();
+        CreateMap<Lesson, LessonNoSensitiveDto>().ReverseMap();
 
         CreateMap<User, UserDto>().ReverseMap();
         CreateMap<User, UserNoSensitiveDto>().ReverseMap();

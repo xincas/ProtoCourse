@@ -6,7 +6,7 @@ namespace ProtoCourse.Data;
 public class User : IdentityUser
 {
     [InverseProperty("Author")]
-    public List<Course> TeachingCourses { get; set; }
+    public List<Course?> TeachingCourses { get; set; }
     [InverseProperty("Students")]
-    public List<Course> StudingCourses { get; set; }
+    public List<Course?> StudingCourses { get; set; }
 }

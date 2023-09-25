@@ -2,9 +2,8 @@
 
 namespace ProtoCourse.Data;
 
-public class Lesson
+public class Lesson : BaseEntity
 {
-    public Guid Id { get; set; }
     [ForeignKey(nameof(Course))]
     public Guid CourseId { get; set; }
     public int Number { get; set; }

@@ -50,6 +50,10 @@ public class ExceptionMiddleware
                 statusCode = HttpStatusCode.BadRequest;
                 errorDetails.ErrorType = "Bad Request";
                 break;
+            case ForbiddenException forbiddenException:
+                statusCode = HttpStatusCode.Forbidden;
+                errorDetails.ErrorType = "Forbidden";
+                break;
             default:
                 break;
         }

@@ -8,7 +8,7 @@ using ProtoCourse.Data;
 
 namespace ProtoCourse.Core.Repository;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : class
+public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 {
     protected readonly CourseDbContext _context;
     protected readonly IMapper _mapper;
@@ -82,9 +82,16 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             .ToListAsync();
     }
 
-    public async Task<T> GetAsync(Guid? id)
+    public async Task<T> GetAsync(Guid? id, IEnumerable<string>? includeFields = null)
     {
-        var result = await _context.Set<T>().FindAsync(id);
+        var query = _context.Set<T>().AsQueryable();
+
+        if (includeFields != null)
+            foreach (var field in includeFields)
+                query = query.Include(field);
+
+        var result = await query.FirstOrDefaultAsync(e => e.Id == id);
+
         if (result is null)
         {
             throw new NotFoundException(typeof(T).Name, id.HasValue ? id : "No Key Provided");
@@ -93,9 +100,16 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return result;
     }
 
-    public async Task<TResult> GetAsync<TResult>(Guid? id)
+    public async Task<TResult> GetAsync<TResult>(Guid? id, IEnumerable<string>? includeFields = null)
     {
-        var result = await _context.Set<T>().FindAsync(id);
+        var query = _context.Set<T>().AsQueryable();
+
+        if (includeFields != null)
+            foreach (var field in includeFields)
+                query = query.Include(field);
+
+        var result = await query.FirstOrDefaultAsync(e => e.Id == id);
+
         if (result is null)
         {
             throw new NotFoundException(typeof(T).Name, id.HasValue ? id : "No Key Provided");

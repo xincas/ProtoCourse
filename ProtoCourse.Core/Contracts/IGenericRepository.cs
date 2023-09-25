@@ -1,11 +1,12 @@
 ﻿using ProtoCourse.Core.Models;
+using ProtoCourse.Data;
 
 namespace ProtoCourse.Core.Contracts;
 
-public interface IGenericRepository<T> where T : class
+public interface IGenericRepository<T> where T : BaseEntity
 {
-    Task<T> GetAsync(Guid? id);
-    Task<TResult> GetAsync<TResult>(Guid? id);
+    Task<T> GetAsync(Guid? id, IEnumerable<string>? includeFields = null);
+    Task<TResult> GetAsync<TResult>(Guid? id, IEnumerable<string>? includeFields = null);
     Task<List<T>> GetAllAsync();
     Task<List<TResult>> GetAllAsync<TResult>();
     Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters);

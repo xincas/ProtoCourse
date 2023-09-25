@@ -51,30 +51,4 @@ public class CoursesRepository : GenericRepository<Course>, ICoursesRepository
 
         return course;
     }
-
-    public async Task<IEnumerable<LessonDto>> GetLessons(Guid id, string userId)
-    {
-        var course = await _context.Courses
-            .Include(c => c.Lessons)
-            .Include(c => c.Students)
-            .FirstOrDefaultAsync(c => c.Id == id)
-            ?? throw new NotFoundException(nameof(Course), id);
-        //TODO Create forbiden exception 
-        if (course.Students.Any(s => s.Id == userId)) throw new BadRequestException("");
-
-        return course.Lessons.AsQueryable()
-            .ProjectTo<LessonDto>(_mapper.ConfigurationProvider);
-    }
-
-    public async Task<IEnumerable<LessonNoSensitiveDto>> GetNoSensitiveLessons(Guid courseId)
-    {
-        var course = await _context.Courses
-            .Include(c => c.Lessons)
-            .Include(c => c.Students)
-            .FirstOrDefaultAsync(c => c.Id == courseId)
-            ?? throw new NotFoundException(nameof(Course), courseId);
-
-        return course.Lessons.AsQueryable()
-            .ProjectTo<LessonNoSensitiveDto>(_mapper.ConfigurationProvider);
-    }
 }

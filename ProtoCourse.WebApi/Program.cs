@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -77,6 +76,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IAuthManager, AuthManager>();
 builder.Services.AddScoped<ICoursesRepository, CoursesRepository>();
 builder.Services.AddScoped<ILessonsRepository, LessonsRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var configuration = builder.Configuration;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>

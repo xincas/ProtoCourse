@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProtoCourse.Core.Contracts;
+using ProtoCourse.Core.Exceptions;
 using ProtoCourse.Core.Models;
 using ProtoCourse.Core.Models.Course;
+using ProtoCourse.Core.Models.Lesson;
 
 namespace ProtoCourse.WebApi.Controllers;
 
@@ -13,40 +15,38 @@ public class CoursesController : ControllerBase
 {
     private readonly ILogger<CoursesController> _logger;
     private readonly ICoursesRepository _courseRepository;
+    private readonly IUserRepository _userRepository;
 
-    public CoursesController(ICoursesRepository courseRepository, ILogger<CoursesController> logger)
-        => (_logger, _courseRepository) = (logger, courseRepository);
+    public CoursesController(ICoursesRepository courseRepository, ILogger<CoursesController> logger, IUserRepository userRepository)
+        => (_logger, _courseRepository, _userRepository) = (logger, courseRepository, userRepository);
+
+
+    #region PublicAcess
 
     [HttpGet("get-all")]
-    public async Task<ActionResult<IEnumerable<CourseDto>>> GetCourses()
+    public async Task<ActionResult<IEnumerable<CourseNoSensitiveDto>>> GetCourses()
     {
-        var courses = await _courseRepository.GetAllAsync();
+        var courses = await _courseRepository.GetAllAsync<CourseNoSensitiveDto>();
         return Ok(courses);
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<GetCourseDto>>> GetPagedCourses([FromQuery] QueryParameters queryParameters)
+    public async Task<ActionResult<PagedResult<CourseNoSensitiveDto>>> GetPagedCourses([FromQuery] QueryParameters queryParameters)
     {
-        var courses = await _courseRepository.GetAllAsync<GetCourseDto>(queryParameters);
-        return Ok(courses);
-    }
-
-    [HttpGet("{id:guid}/lessons")]
-    [Authorize]
-    public async Task<ActionResult<PagedResult<GetCourseDto>>> GetLessonsOfCourse(Guid id)
-    {
-        var userId = HttpContext.User.FindFirst("Id")?.Value;
-        var courses = await _courseRepository.GetLessons(id, userId);
+        var courses = await _courseRepository.GetAllAsync<CourseNoSensitiveDto>(queryParameters);
         return Ok(courses);
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize]
-    public async Task<ActionResult<CourseDto>> GetCourse(Guid id)
+    public async Task<ActionResult<CourseNoSensitiveDto>> GetCourse(Guid id)
     {
-        var course = await _courseRepository.GetAsync(id);
+        var course = await _courseRepository.GetAsync<CourseNoSensitiveDto>(id);
         return Ok(course);
     }
+
+    #endregion
+
+    #region AuthorAcess
 
     [HttpPost]
     [Authorize]
@@ -56,31 +56,42 @@ public class CoursesController : ControllerBase
         return CreatedAtAction(nameof(GetCourse), new { id = course.Id }, course);
     }
 
-    [HttpPost("{id:guid}/buy")]
-    [Authorize]
-    public async Task<ActionResult> BuyCourse(Guid id)
-    {
-        _logger.LogInformation($"User {User.Identity?.Name} tries to buy course {id}");
-        _logger.LogInformation($"User claims \n{User.Claims.Select(it => $"\t{it.Type} - {it.Value}\n")}");
-        _logger.LogInformation($"User id = {HttpContext.User.FindFirst("Id")?.Value}");
-        var userId = HttpContext.User.FindFirst("Id")?.Value;
-        await _courseRepository.AddStudentToCourse(id, userId!);
-        return Ok();
-    }
-
     [HttpPut("{id:guid}")]
     [Authorize]
     public async Task<ActionResult> UpdateCourse(Guid id, UpdateCourseDto updateCourseDto)
     {
+        var userId = HttpContext.User.FindFirst("uid")!.Value;
+
+        if (!await _userRepository.IsUserAuthorOfCourse(userId, id)) throw new ForbiddenException();
+
         await _courseRepository.UpdateAsync(id, updateCourseDto);
         return Ok();
     }
 
     [HttpDelete]
-    [Authorize(Roles = "Administrator")]
+    [Authorize]
     public async Task<ActionResult> DeleteCourse(Guid id)
     {
+        var userId = HttpContext.User.FindFirst("uid")!.Value;
+
+        if (!await _userRepository.IsUserAuthorOfCourse(userId, id)) throw new ForbiddenException();
+
         await _courseRepository.DeleteAsync(id);
         return NoContent();
     }
+
+    #endregion
+
+    #region StudentAccess
+
+    [HttpPost("{id:guid}/buy")]
+    [Authorize]
+    public async Task<ActionResult> BuyCourse(Guid id)
+    {
+        var userId = HttpContext.User.FindFirst("uid")?.Value;
+        await _courseRepository.AddStudentToCourse(id, userId!);
+        return Ok();
+    }
+
+    #endregion
 }
